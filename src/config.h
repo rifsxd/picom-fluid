@@ -40,6 +40,18 @@ enum backend {
 	NUM_BKEND,
 };
 
+enum open_window_animation {
+	OPEN_WINDOW_ANIMATION_NONE = 0,
+	OPEN_WINDOW_ANIMATION_AUTO,
+	OPEN_WINDOW_ANIMATION_FLYIN,
+	OPEN_WINDOW_ANIMATION_ZOOM,
+	OPEN_WINDOW_ANIMATION_SLIDE_UP,
+	OPEN_WINDOW_ANIMATION_SLIDE_DOWN,
+	OPEN_WINDOW_ANIMATION_SLIDE_LEFT,
+	OPEN_WINDOW_ANIMATION_SLIDE_RIGHT,
+	OPEN_WINDOW_ANIMATION_INVALID,
+};
+
 typedef struct win_option_mask {
 	bool shadow : 1;
 	bool fade : 1;
@@ -49,6 +61,8 @@ typedef struct win_option_mask {
 	bool redir_ignore : 1;
 	bool opacity : 1;
 	bool clip_shadow_above : 1;
+	enum open_window_animation animation;
+	enum open_window_animation animation_unmap;
 } win_option_mask_t;
 
 typedef struct win_option {
@@ -60,6 +74,8 @@ typedef struct win_option {
 	bool redir_ignore;
 	double opacity;
 	bool clip_shadow_above;
+	enum open_window_animation animation;
+	enum open_window_animation animation_unmap;
 } win_option_t;
 
 enum blur_method {
@@ -174,6 +190,26 @@ typedef struct options {
 	/// Fading blacklist. A linked list of conditions.
 	c2_lptr_t *fade_blacklist;
 
+	// === Animations ===
+	/// Whether to do window animations
+	bool animations;
+	/// Which animation to run when opening a window
+	enum open_window_animation animation_for_open_window;
+	/// Which animation to run when unmapping (e.g. minimizing) a window
+	enum open_window_animation animation_for_unmap_window;
+	/// Spring stiffness for animation
+	double animation_stiffness;
+	/// Window mass for animation
+	double animation_window_mass;
+	/// Animation dampening
+	double animation_dampening;
+	/// Animation delta. In milliseconds.
+	double animation_delta;
+	/// Whether to force animations to not miss a beat
+	bool animation_force_steps;
+	/// Whether to clamp animations
+	bool animation_clamping;
+
 	// === Opacity ===
 	/// Default opacity for inactive windows.
 	/// 32-bit integer with the format of _NET_WM_WINDOW_OPACITY.
@@ -224,6 +260,10 @@ typedef struct options {
 	c2_lptr_t *invert_color_list;
 	/// Rules to change window opacity.
 	c2_lptr_t *opacity_rules;
+	// Rules to exclude windows from having a open animation
+	c2_lptr_t *animation_open_blacklist;
+	// Rules to exclude windows from having a unmap animation	
+	c2_lptr_t *animation_unmap_blacklist;
 	/// Limit window brightness
 	double max_brightness;
 	// Radius of rounded window corners
@@ -275,6 +315,7 @@ bool must_use parse_rule_window_shader(c2_lptr_t **, const char *, const char *)
 char *must_use locate_auxiliary_file(const char *scope, const char *path,
                                      const char *include_dir);
 enum blur_method must_use parse_blur_method(const char *src);
+enum open_window_animation must_use parse_open_window_animation(const char *src);
 
 /**
  * Add a pattern to a condition linked list.

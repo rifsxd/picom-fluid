@@ -145,6 +145,8 @@ typedef struct session {
 	ev_timer unredir_timer;
 	/// Timer for fading
 	ev_timer fade_timer;
+	/// Timer for animations
+	ev_timer animation_timer;
 	/// Use an ev_timer callback for drawing
 	ev_timer draw_timer;
 	/// Called every time we have timeouts or new data on socket,
@@ -262,7 +264,9 @@ typedef struct session {
 	/// Pre-generated alpha pictures.
 	xcb_render_picture_t *alpha_picts;
 	/// Time of last fading. In milliseconds.
-	long long fade_time;
+	long fade_time;
+	/// Time of last window animation step. In milliseconds.
+	long animation_time;
 	// Cached blur convolution kernels.
 	struct x_convolution_kernel **blur_kerns_cache;
 	/// If we should quit

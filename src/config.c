@@ -725,7 +725,36 @@ void set_default_winopts(options_t *opt, win_option_mask_t *mask, bool shadow_en
 			mask[i].clip_shadow_above = true;
 			opt->wintype_option[i].clip_shadow_above = false;
 		}
+		if (!mask[i].animation) {
+			mask[i].animation = OPEN_WINDOW_ANIMATION_INVALID;
+			opt->wintype_option[i].animation = OPEN_WINDOW_ANIMATION_INVALID;
+		}
+		if (!mask[i].animation_unmap) {
+			mask[i].animation_unmap = OPEN_WINDOW_ANIMATION_INVALID;
+			opt->wintype_option[i].animation_unmap = OPEN_WINDOW_ANIMATION_INVALID;
+		}
 	}
+}
+
+enum open_window_animation parse_open_window_animation(const char *src) {
+	if (strcmp(src, "none") == 0) {
+		return OPEN_WINDOW_ANIMATION_NONE;
+	}else if (strcmp(src, "auto") == 0) {
+		return OPEN_WINDOW_ANIMATION_AUTO;
+	} else if (strcmp(src, "fly-in") == 0) {
+		return OPEN_WINDOW_ANIMATION_FLYIN;
+	} else if (strcmp(src, "zoom") == 0) {
+		return OPEN_WINDOW_ANIMATION_ZOOM;
+	} else if (strcmp(src, "slide-up") == 0) {
+		return OPEN_WINDOW_ANIMATION_SLIDE_UP;
+	} else if (strcmp(src, "slide-down") == 0) {
+		return OPEN_WINDOW_ANIMATION_SLIDE_DOWN;
+	} else if (strcmp(src, "slide-left") == 0) {
+		return OPEN_WINDOW_ANIMATION_SLIDE_LEFT;
+	} else if (strcmp(src, "slide-right") == 0) {
+		return OPEN_WINDOW_ANIMATION_SLIDE_RIGHT;
+	}
+	return OPEN_WINDOW_ANIMATION_INVALID;
 }
 
 char *parse_config(options_t *opt, const char *config_file, bool *shadow_enable,
@@ -772,6 +801,18 @@ char *parse_config(options_t *opt, const char *config_file, bool *shadow_enable,
 	    .no_fading_openclose = false,
 	    .no_fading_destroyed_argb = false,
 	    .fade_blacklist = NULL,
+
+		.animations = true,
+	    .animation_for_open_window = OPEN_WINDOW_ANIMATION_ZOOM,
+	    .animation_for_unmap_window = OPEN_WINDOW_ANIMATION_ZOOM,
+	    .animation_stiffness = 120,
+	    .animation_window_mass = 0.5,
+	    .animation_dampening = 12,
+	    .animation_delta = 10,
+	    .animation_force_steps = false,
+	    .animation_clamping = false,
+		.animation_open_blacklist = NULL,
+		.animation_unmap_blacklist = NULL,
 
 	    .inactive_opacity = 1.0,
 	    .inactive_opacity_override = false,

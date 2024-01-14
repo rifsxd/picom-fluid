@@ -101,6 +101,7 @@ struct managed_win {
 	/// backend data attached to this window. Only available when
 	/// `state` is not UNMAPPED
 	void *win_image;
+	void *old_win_image; // Old window image for interpolating window contents during animations
 	void *shadow_image;
 	void *mask_image;
 	/// Pointer to the next higher window to paint.
@@ -138,7 +139,7 @@ struct managed_win {
 	/// bitmap for properties which needs to be updated
 	uint64_t *stale_props;
 	/// number of uint64_ts that has been allocated for stale_props
-	size_t stale_props_capacity;
+	uint64_t stale_props_capacity;
 
 	/// Bounding shape of the window. In local coordinates.
 	/// See above about coordinate systems.
@@ -169,7 +170,19 @@ struct managed_win {
 	bool unredir_if_possible_excluded;
 	/// Whether this window is in open/close state.
 	bool in_openclose;
-
+	/// Current position and destination, for animation
+	double animation_center_x,      animation_center_y;
+	double animation_dest_center_x, animation_dest_center_y;
+	double animation_w,      animation_h;
+	double animation_dest_w, animation_dest_h;
+	/// Spring animation velocity
+	double animation_velocity_x, animation_velocity_y;
+	double animation_velocity_w, animation_velocity_h;
+	/// Track animation progress; goes from 0 to 1
+	double animation_progress;
+	/// Inverse of the window distance at the start of animation, for
+	/// tracking animation progress
+	double animation_inv_og_distance;
 	// Client window related members
 	/// ID of the top-level client window of the window.
 	xcb_window_t client_win;

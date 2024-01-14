@@ -184,6 +184,22 @@ static const struct picom_option picom_options[] = {
                                                                              "you want to attach a debugger to picom"},
     {"no-ewmh-fullscreen"          , no_argument      , 803, NULL          , "Do not use EWMH to detect fullscreen windows. Reverts to checking if a "
                                                                              "window is fullscreen based only on its size and coordinates."},
+	{"animations"                  , no_argument      , 804, NULL          , "Toggles Animations"},
+    {"animation-stiffness"         , required_argument, 805, NULL          , "How much the window geometry will be stretched when opening/closing windows. "
+														                     "With a higher stiffness the windows go to the final animation position faster "
+																			 "resulting in a snappier looking transition. (0 - 500, defaults to 120)"},
+    {"animation-dampening"         , required_argument, 806, NULL          , "The higher value, the more windows are dampened, the slower/softer they come "
+	                                                                         "into and out of view. (0 - 50, defaults to 12)"},
+    {"animation-window-mass"       , required_argument, 807, NULL          , "Increases the windows virtual weight."},
+    {"animation-clamping"          , no_argument      , 808, NULL          , "If you are using a animation setting that would make the window extend larger "
+	                                                                         "than it would be after the animation has played then it will cut the animation off " 
+												   							 "once the window reaches its physical geometry."},
+    {"animation-for-open-window"   , required_argument, 809, NULL          , "Set the open window animation " 
+																			 "(none/zoom/slide-up/slide-down/slide-left/slide-right/fly-in)"},
+    {"animation-for-unmap-window"  , required_argument, 811, NULL          , "Set the unmap window animation " 
+																			 "(none/zoom/slide-up/slide-down/slide-left/slide-right/fly-in)"},
+    {"animation-open-exclude"      , required_argument, 814, "COND"        , "Exclude conditions for open-window animations"},
+    {"animation-unmap-exclude"     , required_argument, 815, "COND"        , "Exclude conditions for unmap-window animations"},
 };
 // clang-format on
 
@@ -750,6 +766,49 @@ bool get_cfg(options_t *opt, int argc, char *const *argv, bool shadow_enable,
 			break;
 		P_CASEBOOL(802, debug_mode);
 		P_CASEBOOL(803, no_ewmh_fullscreen);
+		P_CASEBOOL(804, animations);
+		case 805:
+			// --animation-stiffness
+			opt->animation_stiffness = atof(optarg);
+			break;
+		case 806:
+			// --animation-dampening
+			opt->animation_dampening = atof(optarg);
+			break;
+		case 807:
+			// --animation-window-masss
+			opt->animation_window_mass = atof(optarg);
+			break;
+		case 808:
+			// --animation-clamping
+			opt->animation_clamping = true;
+			break;
+		case 809: {
+			// --animation-for-open-window
+			enum open_window_animation animation = parse_open_window_animation(optarg);
+			if (animation >= OPEN_WINDOW_ANIMATION_INVALID) {
+				log_warn("Invalid open-window animation %s, ignoring.", optarg);
+			} else {
+				opt->animation_for_open_window = animation;
+			}
+			break;
+		}
+		case 810: {
+			// --animation-for-unmap-window
+			enum open_window_animation animation = parse_open_window_animation(optarg);
+			if (animation >= OPEN_WINDOW_ANIMATION_INVALID) {
+				log_warn("Invalid unmap-window animation %s, ignoring.", optarg);
+			} else {
+				opt->animation_for_unmap_window = animation;
+			}
+			break;
+		}
+		case 811:
+			condlst_add(&opt->animation_open_blacklist, optarg);
+			break;
+		case 812:
+			condlst_add(&opt->animation_unmap_blacklist, optarg);
+			break;
 		default: usage(argv[0], 1); break;
 #undef P_CASEBOOL
 		}

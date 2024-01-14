@@ -235,6 +235,7 @@ static inline void parse_wintype_config(const config_t *cfg, const char *member_
 	free(str);
 
 	int ival = 0;
+	const char *sval = NULL;
 	if (setting) {
 		if (config_setting_lookup_bool(setting, "shadow", &ival)) {
 			o->shadow = ival;
@@ -269,6 +270,22 @@ static inline void parse_wintype_config(const config_t *cfg, const char *member_
 		if (config_setting_lookup_float(setting, "opacity", &fval)) {
 			o->opacity = normalize_d(fval);
 			mask->opacity = true;
+		}
+		if (config_setting_lookup_string(setting, "animation", &sval)) {
+			enum open_window_animation animation = parse_open_window_animation(sval);
+			if (animation >= OPEN_WINDOW_ANIMATION_INVALID)
+				animation = OPEN_WINDOW_ANIMATION_NONE;
+
+			o->animation = animation;
+			mask->animation = OPEN_WINDOW_ANIMATION_INVALID;
+		}
+		if (config_setting_lookup_string(setting, "animation-unmap", &sval)) {
+			enum open_window_animation animation = parse_open_window_animation(sval);
+			if (animation >= OPEN_WINDOW_ANIMATION_INVALID)
+				animation = OPEN_WINDOW_ANIMATION_NONE;
+
+			o->animation_unmap = animation;
+			mask->animation_unmap = OPEN_WINDOW_ANIMATION_INVALID;
 		}
 	}
 }
@@ -513,6 +530,42 @@ char *parse_config_libconfig(options_t *opt, const char *config_file, bool *shad
 	parse_cfg_condlst(&cfg, &opt->shadow_clip_list, "clip-shadow-above");
 	// --fade-exclude
 	parse_cfg_condlst(&cfg, &opt->fade_blacklist, "fade-exclude");
+	// --animations
+	lcfg_lookup_bool(&cfg, "animations", &opt->animations);
+	// --animation-for-open-window
+	if (config_lookup_string(&cfg, "animation-for-open-window", &sval)) {
+		enum open_window_animation animation = parse_open_window_animation(sval);
+		if (animation >= OPEN_WINDOW_ANIMATION_INVALID) {
+			log_fatal("Invalid open-window animation %s", sval);
+			goto err;
+		}
+		opt->animation_for_open_window = animation;
+	}
+	// --animation-for-unmap-window
+	if (config_lookup_string(&cfg, "animation-for-unmap-window", &sval)) {
+		enum open_window_animation animation = parse_open_window_animation(sval);
+		if (animation >= OPEN_WINDOW_ANIMATION_INVALID) {
+			log_fatal("Invalid unmap-window animation %s", sval);
+			goto err;
+		}
+		opt->animation_for_unmap_window = animation;
+	}
+	// --animation-stiffness
+	config_lookup_float(&cfg, "animation-stiffness", &opt->animation_stiffness);
+	// --animation-window-mass
+	config_lookup_float(&cfg, "animation-window-mass", &opt->animation_window_mass);
+	// --animation-dampening
+	config_lookup_float(&cfg, "animation-dampening", &opt->animation_dampening);
+	// --animation-delta
+	config_lookup_float(&cfg, "animation-delta", &opt->animation_delta);
+	// --animation-force-steps
+	lcfg_lookup_bool(&cfg, "animation-force-steps", &opt->animation_force_steps);
+	// --animation-clamping
+	lcfg_lookup_bool(&cfg, "animation-clamping", &opt->animation_clamping);
+	// animation exclude
+	parse_cfg_condlst(&cfg, &opt->animation_open_blacklist, "animation-open-exclude");
+	// animation exclude
+	parse_cfg_condlst(&cfg, &opt->animation_unmap_blacklist, "animation-unmap-exclude");
 	// --focus-exclude
 	parse_cfg_condlst(&cfg, &opt->focus_blacklist, "focus-exclude");
 	// --invert-color-include
